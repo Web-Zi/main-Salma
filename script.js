@@ -13,6 +13,13 @@ function unlockHQApp() {
         document.getElementById('hq-login-screen').classList.add('hidden');
         document.getElementById('hq-dashboard').classList.remove('hidden');
         renderReports();
+        
+        // Start auto-refresh timer (Every 15 minutes = 900,000 milliseconds)
+        setInterval(() => {
+            renderReports();
+            console.log("HQ Reports auto-refreshed.");
+        }, 15 * 60 * 1000);
+
     } else {
         alert("كلمة المرور غير صحيحة!");
     }
