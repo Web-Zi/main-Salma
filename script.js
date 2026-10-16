@@ -18,7 +18,7 @@ function unlockHQApp() {
         setInterval(() => {
             renderReports();
             console.log("HQ Reports auto-refreshed.");
-        }, 15 * 60 * 1000);
+        }, 3 * 60 * 1000);
 
     } else {
         alert("كلمة المرور غير صحيحة!");
