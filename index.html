@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Salma HQ Receiver</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body class="light-mode">
+
+    <!-- HQ Password Login Shield -->
+    <div id="hq-login-screen">
+        <div class="login-card">
+            <div class="logo">SALMA HQ</div>
+            <p class="subtitle">تطبيق استقبال الجرد - الفرع الرئيسي</p>
+            <input type="password" id="hq-app-password" placeholder="كلمة مرور التطبيق...">
+            <button onclick="unlockHQApp()" class="btn-confirm" style="width: 100%; margin-top: 10px;">دخول</button>
+        </div>
+    </div>
+
+    <!-- Main Dashboard -->
+    <div id="hq-dashboard" class="hidden">
+        <header class="app-header">
+            <div class="header-left">
+                <button class="theme-toggle-btn" onclick="toggleTheme()">🌙 / ☀️</button>
+            </div>
+            <div class="logo-container">
+                <div class="logo">SALMA MAIN</div>
+                <p class="subtitle">سجل التقارير المستلمة من جميع الفروع</p>
+            </div>
+            <div class="header-right">
+                <button class="admin-icon-btn" onclick="openHQAdminModal()">⚙️</button>
+            </div>
+        </header>
+
+        <div class="container">
+            <div class="action-top">
+                <h3>تقارير الفروع المستلمة:</h3>
+                <button onclick="clearAllReports()" class="btn-cancel">تفريغ السجل</button>
+            </div>
+
+            <div id="reports-list" class="reports-grid">
+                <!-- Dynamic Branch Cards Rendered Here -->
+            </div>
+        </div>
+    </div>
+
+    <!-- HQ Admin Config Modal -->
+    <div id="hq-admin-modal" class="modal">
+        <div class="modal-content">
+            <h3>إعدادات المشرف - الفرع الرئيسي</h3>
+            <label>تغيير كلمة مرور دخول التطبيق:</label>
+            <input type="text" id="hq-pass-edit">
+            <div class="modal-actions" style="margin-top: 15px;">
+                <button onclick="saveHQAdminSettings()" class="btn-confirm">حفظ</button>
+                <button onclick="closeHQAdminModal()" class="btn-cancel">إغلاق</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
