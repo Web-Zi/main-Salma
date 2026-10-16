@@ -33,9 +33,9 @@ function renderReports() {
     }
 
     container.innerHTML = "";
-    reports.forEach((rep, idx) => {
+    reports.forEach((rep) => {
         const card = document.createElement('div');
-        card.className = 'report-card';
+        card.className = `report-card ${rep.checked ? 'checked-report' : ''}`;
         card.innerHTML = `
             <div class="report-details">
                 <h4>🏢 ${rep.branchName}</h4>
@@ -43,12 +43,28 @@ function renderReports() {
                 <p>📅 <strong>تاريخ التقرير:</strong> ${rep.date}</p>
                 <p>📁 <strong>اسم الملف:</strong> ${rep.excelFileName}</p>
             </div>
-            <div>
+            <div style="display: flex; align-items: center; gap: 15px;">
                 <a href="${rep.downloadUrl}" download="${rep.excelFileName}" class="btn-confirm" style="text-decoration:none; display:inline-block;">📥 تحميل Excel</a>
+                <div style="text-align: center;">
+                    <label style="font-size: 0.8rem; display: block; margin-bottom: 3px;">تمت المراجعة</label>
+                    <input type="checkbox" ${rep.checked ? 'checked' : ''} onchange="toggleReportCheck(${rep.id})" style="width: 22px; height: 22px; cursor: pointer;">
+                </div>
             </div>
         `;
         container.appendChild(card);
     });
+}
+
+function toggleReportCheck(id) {
+    let reports = getStoredReports();
+    reports = reports.map(rep => {
+        if (rep.id === id) {
+            rep.checked = !rep.checked;
+        }
+        return rep;
+    });
+    localStorage.setItem('salma_hq_reports_log', JSON.stringify(reports));
+    renderReports();
 }
 
 function clearAllReports() {
