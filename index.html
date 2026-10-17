@@ -3,55 +3,42 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Salma HQ Receiver</title>
+    <title>Salma HQ Inventory Receiver</title>
     <link rel="stylesheet" href="style.css">
 </head>
-<body class="dark-mode">
+<body class="light-mode">
 
-    <!-- HQ Password Login Screen -->
-    <div id="hq-login-screen" class="login-wrapper">
-        <div class="login-card">
-            <h2>🏢 الفرع الرئيسي - سلمى</h2>
-            <p>أدخل كلمة مرور الإدارة لعرض التقارير المستلمة:</p>
-            <input type="password" id="hq-app-password" placeholder="****">
-            <button onclick="unlockHQApp()" class="btn-confirm" style="margin-top: 15px; width: 100%;">دخول</button>
+    <!-- Login Screen -->
+    <div id="hq-login-screen" class="modal-overlay">
+        <div class="modal-box">
+            <h2>🏢 الفرع الرئيسي - تسجيل الدخول</h2>
+            <p>يرجى إدخال كلمة المرور للوصول إلى لوحة التقارير</p>
+            <input type="password" id="hq-app-password" placeholder="كلمة المرور (الافتراضية: 0000)" class="styled-input">
+            <button onclick="unlockHQApp()" class="btn-primary" style="width: 100%; margin-top: 10px;">دخول</button>
         </div>
     </div>
 
-    <!-- HQ Dashboard -->
-    <div id="hq-dashboard" class="hidden">
-        <header>
-            <div class="header-left">
-                <h1>🏢 لوحة استلام التقارير - الفرع الرئيسي</h1>
+    <!-- Dashboard Main View -->
+    <div id="hq-dashboard" class="hidden container">
+        <header class="top-bar">
+            <div class="header-titles">
+                <h1>🏢 لوحة تحكم الفرع الرئيسي</h1>
+                <p>متابعة تقارير الجرد المستلمة من الفروع</p>
             </div>
             <div class="header-actions">
-                <button onclick="toggleTheme()" class="btn-theme">🌓 المظهر</button>
-                <button onclick="openHQAdminModal()" class="btn-admin">⚙️ الإعدادات</button>
+                <button onclick="toggleTheme()" class="btn-icon" title="تغيير المظهر">🌙/☀️</button>
+                <button onclick="fetchAndRenderReports()" class="btn-secondary">🔄 تحديث</button>
+                <!-- Fixed Settings Button -->
+                <button onclick="changeHQPassword()" class="btn-secondary">⚙️ تغيير كلمة المرور</button>
+                <button onclick="clearAllReports()" class="btn-danger">🗑️ مسح جميع التقارير</button>
             </div>
         </header>
 
-        <div class="dashboard-controls">
-            <button onclick="fetchAndRenderReports()" class="btn-refresh">🔄 تحديث التقارير الآن</button>
-            <button onclick="clearAllReports()" class="btn-danger-outline">🗑️ مسح جميع التقارير</button>
-        </div>
-
-        <section class="reports-container">
-            <h3>📂 التقارير المستلمة من الفروع</h3>
-            <div id="reports-list" class="reports-grid"></div>
-        </section>
-    </div>
-
-    <!-- Admin Settings Modal -->
-    <div id="hq-admin-modal" class="modal-overlay">
-        <div class="modal-card">
-            <h3>تغيير كلمة مرور الإدارة</h3>
-            <label>كلمة المرور الجديدة:</label>
-            <input type="text" id="hq-pass-edit">
-            <div class="modal-actions" style="margin-top: 15px;">
-                <button onclick="saveHQAdminSettings()" class="btn-confirm">حفظ</button>
-                <button onclick="closeHQAdminModal()" class="btn-cancel">إلغاء</button>
+        <main class="content-area">
+            <div id="reports-list" class="reports-grid">
+                <p style="text-align: center; color: var(--text-muted); font-weight: bold;">جاري تحميل التقارير...</p>
             </div>
-        </div>
+        </main>
     </div>
 
     <script src="script.js"></script>
