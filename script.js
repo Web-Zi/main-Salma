@@ -30,7 +30,7 @@ function unlockHQApp() {
 
 async function fetchAndRenderReports() {
     const container = document.getElementById('reports-list');
-    container.innerHTML = `<p style="text-align: center; color: #64748b;">جاري تحديث التقارير من السحابة...</p>`;
+    container.innerHTML = `<p style="text-align: center; color: var(--text-muted);">جاري تحديث التقارير من السحابة...</p>`;
 
     try {
         const response = await fetch(CLOUD_API_URL);
@@ -38,7 +38,7 @@ async function fetchAndRenderReports() {
         renderReportsUI(reports);
     } catch (error) {
         console.error(error);
-        container.innerHTML = `<p style="text-align: center; color: #ef4444;">فشل الاتصال بالسحابة. تحقق من اتصال الإنترنت.</p>`;
+        container.innerHTML = `<p style="text-align: center; color: var(--accent-red);">فشل الاتصال بالسحابة. تحقق من اتصال الإنترنت.</p>`;
     }
 }
 
@@ -46,7 +46,7 @@ function renderReportsUI(reports) {
     const container = document.getElementById('reports-list');
 
     if (!reports || reports.length === 0) {
-        container.innerHTML = `<p style="text-align: center; color: #64748b;">لا توجد تقارير جرد مستلمة حتى الآن.</p>`;
+        container.innerHTML = `<p style="text-align: center; color: var(--text-muted);">لا توجد تقارير جرد مستلمة حتى الآن.</p>`;
         return;
     }
 
@@ -61,16 +61,43 @@ function renderReportsUI(reports) {
                 <p>📅 <strong>تاريخ التقرير:</strong> ${rep.date}</p>
                 <p>📁 <strong>اسم الملف:</strong> ${rep.excelFileName}</p>
             </div>
-            <div style="display: flex; align-items: center; gap: 15px;">
-                <a href="${rep.downloadUrl}" download="${rep.excelFileName}" class="btn-confirm" style="text-decoration:none; display:inline-block;">📥 تحميل Excel</a>
+            <div style="display: flex; align-items: center; gap: 15px; flex-wrap: wrap;">
+                <button onclick="downloadReportExcel('${rep.downloadUrl}', '${rep.excelFileName}')" class="btn-confirm">📥 تحميل Excel</button>
                 <div style="text-align: center;">
-                    <label style="font-size: 0.8rem; display: block; margin-bottom: 3px;">تمت المراجعة</label>
+                    <label style="font-size: 0.8rem; display: block; margin-bottom: 3px; color: var(--text-muted);">تمت المراجعة</label>
                     <input type="checkbox" ${rep.checked ? 'checked' : ''} onchange="toggleReportCheck(${rep.id})" style="width: 22px; height: 22px; cursor: pointer;">
                 </div>
             </div>
         `;
         container.appendChild(card);
     });
+}
+
+// Safe Blob download handler for Android WebView APKs
+function downloadReportExcel(dataUri, fileName) {
+    try {
+        const arr = dataUri.split(',');
+        const mime = arr[0].match(/:(.*?);/)[1];
+        const bstr = atob(arr[1]);
+        let n = bstr.length;
+        const u8arr = new Uint8Array(n);
+        while (n--) {
+            u8arr[n] = bstr.charCodeAt(n);
+        }
+        const blob = new Blob([u8arr], { type: mime });
+        const blobUrl = URL.createObjectURL(blob);
+        
+        const a = document.createElement('a');
+        a.href = blobUrl;
+        a.download = fileName;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        setTimeout(() => URL.revokeObjectURL(blobUrl), 2000);
+    } catch (error) {
+        console.error(error);
+        alert("تعذر تحميل الملف داخل التطبيق. تأكد من إعطاء أذونات التخزين للتطبيق.");
+    }
 }
 
 async function toggleReportCheck(id) {
@@ -81,7 +108,7 @@ async function toggleReportCheck(id) {
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ action: "toggle", id: id })
         });
-        setTimeout(fetchAndRenderReports, 1000); // Refresh UI after toggling status
+        setTimeout(fetchAndRenderReports, 1000);
     } catch (error) {
         console.error(error);
     }
