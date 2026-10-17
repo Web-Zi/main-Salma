@@ -1,36 +1,42 @@
-// Google Apps Script Cloud API Endpoint
+// =========================================================================
+// 🔗 PASTE YOUR GOOGLE APPS SCRIPT WEB APP URL HERE:
+// =========================================================================
 const CLOUD_API_URL = "https://script.google.com/macros/s/AKfycby-HCCNrYC-ZB0IKRFfZP2w4CXz2SmLz3MNJbGUCRGsywhTNe096MLxLaOU6L4GA3PRuA/exec";
 
+// Retrieve HQ Admin Password (Default: "0000")
 function getHQPassword() {
     return localStorage.getItem('salma_hq_password') || "0000";
 }
 
+// Toggle Dark / Light Theme
 function toggleTheme() {
     document.body.classList.toggle("dark-mode");
     document.body.classList.toggle("light-mode");
 }
 
+// Login Verification
 function unlockHQApp() {
     const entered = document.getElementById('hq-app-password').value;
     if (entered === getHQPassword()) {
         document.getElementById('hq-login-screen').classList.add('hidden');
         document.getElementById('hq-dashboard').classList.remove('hidden');
+        
+        // Fetch reports immediately upon login
         fetchAndRenderReports();
         
-        // Auto-refresh every 15 minutes from the cloud
+        // Auto-refresh reports every 5 minutes
         setInterval(() => {
             fetchAndRenderReports();
-            console.log("HQ Cloud reports auto-refreshed.");
-        }, 15 * 60 * 1000);
-
+        }, 5 * 60 * 1000);
     } else {
         alert("كلمة المرور غير صحيحة!");
     }
 }
 
+// Fetch Reports from Google Apps Script Cloud Endpoint
 async function fetchAndRenderReports() {
     const container = document.getElementById('reports-list');
-    container.innerHTML = `<p style="text-align: center; color: var(--text-muted);">جاري تحديث التقارير من السحابة...</p>`;
+    container.innerHTML = `<p style="text-align: center; color: var(--text-muted); font-weight: bold;">جاري تحديث التقارير من السحابة...</p>`;
 
     try {
         const response = await fetch(CLOUD_API_URL);
@@ -38,34 +44,38 @@ async function fetchAndRenderReports() {
         renderReportsUI(reports);
     } catch (error) {
         console.error(error);
-        container.innerHTML = `<p style="text-align: center; color: var(--accent-red);">فشل الاتصال بالسحابة. تحقق من اتصال الإنترنت.</p>`;
+        container.innerHTML = `<p style="text-align: center; color: #ef4444; font-weight: bold;">فشل الاتصال بالسحابة. تحقق من اتصال الإنترنت.</p>`;
     }
 }
 
+// Render Received Reports in HQ Dashboard
 function renderReportsUI(reports) {
     const container = document.getElementById('reports-list');
 
     if (!reports || reports.length === 0) {
-        container.innerHTML = `<p style="text-align: center; color: var(--text-muted);">لا توجد تقارير جرد مستلمة حتى الآن.</p>`;
+        container.innerHTML = `<p style="text-align: center; color: var(--text-muted); padding: 20px;">لا توجد تقارير جرد مستلمة حتى الآن.</p>`;
         return;
     }
 
     container.innerHTML = "";
-    reports.forEach((rep) => {
+    // Display newest reports first
+    reports.reverse().forEach((rep) => {
         const card = document.createElement('div');
         card.className = `report-card ${rep.checked ? 'checked-report' : ''}`;
+        
+        const dataUriPayload = rep.pdfDataUri || rep.downloadUrl;
+
         card.innerHTML = `
             <div class="report-details">
-                <h4>🏢 ${rep.branchName}</h4>
-                <p>📞 <strong>الهاتف:</strong> ${rep.phone}</p>
-                <p>📅 <strong>تاريخ التقرير:</strong> ${rep.date}</p>
-                <p>📁 <strong>اسم الملف:</strong> ${rep.excelFileName}</p>
+                <h4 style="margin: 0 0 5px 0; font-size: 1.1rem; color: var(--accent-blue);">🏢 ${rep.branchName}</h4>
+                <p style="margin: 3px 0; font-size: 0.9rem;">📞 <strong>الهاتف:</strong> ${rep.phone}</p>
+                <p style="margin: 3px 0; font-size: 0.9rem;">📅 <strong>التاريخ:</strong> ${rep.date}</p>
             </div>
-            <div style="display: flex; align-items: center; gap: 15px; flex-wrap: wrap;">
-                <button onclick="downloadReportExcel('${rep.downloadUrl}', '${rep.excelFileName}')" class="btn-confirm">📥 تحميل Excel</button>
+            <div style="display: flex; align-items: center; gap: 12px; flex-wrap: wrap;">
+                <button onclick="openReportView('${dataUriPayload}')" class="btn-confirm" style="padding: 8px 16px; font-size: 0.9rem; cursor: pointer;">📄 عرض / طباعة التقرير</button>
                 <div style="text-align: center;">
-                    <label style="font-size: 0.8rem; display: block; margin-bottom: 3px; color: var(--text-muted);">تمت المراجعة</label>
-                    <input type="checkbox" ${rep.checked ? 'checked' : ''} onchange="toggleReportCheck(${rep.id})" style="width: 22px; height: 22px; cursor: pointer;">
+                    <label style="font-size: 0.75rem; display: block; margin-bottom: 2px; color: var(--text-muted);">تمت المراجعة</label>
+                    <input type="checkbox" ${rep.checked ? 'checked' : ''} onchange="toggleReportCheck(${rep.id})" style="width: 20px; height: 20px; cursor: pointer;">
                 </div>
             </div>
         `;
@@ -73,77 +83,74 @@ function renderReportsUI(reports) {
     });
 }
 
-// Safe Blob download handler for Android WebView APKs
-function downloadReportExcel(dataUri, fileName) {
+// Opens the HTML/PDF report in a formatted popup window ready for printing/saving
+function openReportView(dataUri) {
+    if (!dataUri) {
+        alert("تعذر فتح التقرير. البيانات غير مكتملة.");
+        return;
+    }
+
+    const win = window.open("", "_blank");
     try {
-        const arr = dataUri.split(',');
-        const mime = arr[0].match(/:(.*?);/)[1];
-        const bstr = atob(arr[1]);
-        let n = bstr.length;
-        const u8arr = new Uint8Array(n);
-        while (n--) {
-            u8arr[n] = bstr.charCodeAt(n);
-        }
-        const blob = new Blob([u8arr], { type: mime });
-        const blobUrl = URL.createObjectURL(blob);
+        const base64Part = dataUri.includes(",") ? dataUri.split(',')[1] : dataUri;
+        const htmlContent = decodeURIComponent(escape(atob(base64Part)));
         
-        const a = document.createElement('a');
-        a.href = blobUrl;
-        a.download = fileName;
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        setTimeout(() => URL.revokeObjectURL(blobUrl), 2000);
-    } catch (error) {
-        console.error(error);
-        alert("تعذر تحميل الملف داخل التطبيق. تأكد من إعطاء أذونات التخزين للتطبيق.");
+        win.document.write(htmlContent);
+        win.document.write(`
+            <div style="text-align: center; margin: 30px 0; font-family: system-ui, sans-serif;">
+                <button onclick="window.print()" style="padding: 12px 24px; font-size: 16px; font-weight: bold; background: #2563eb; color: white; border: none; border-radius: 8px; cursor: pointer; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);">🖨️ طباعة / حفظ كـ PDF</button>
+            </div>
+        `);
+        win.document.close();
+    } catch (e) {
+        console.error("Error opening report window:", e);
+        // Fallback: open directly if decoding fails
+        win.location.href = dataUri;
     }
 }
 
+// Toggle Report "Checked / Reviewed" Status in Cloud
 async function toggleReportCheck(id) {
     try {
         await fetch(CLOUD_API_URL, {
             method: "POST",
-            mode: "no-cors",
-            headers: { "Content-Type": "application/json" },
+            headers: { "Content-Type": "text/plain;charset=utf-8" },
             body: JSON.stringify({ action: "toggle", id: id })
         });
-        setTimeout(fetchAndRenderReports, 1000);
+        setTimeout(fetchAndRenderReports, 800);
     } catch (error) {
         console.error(error);
     }
 }
 
+// Clear All Reports History
 async function clearAllReports() {
     if (confirm("هل أنت متأكد من مسح جميع التقارير من السجل والسحابة؟")) {
         try {
             await fetch(CLOUD_API_URL, {
                 method: "POST",
-                mode: "no-cors",
-                headers: { "Content-Type": "application/json" },
+                headers: { "Content-Type": "text/plain;charset=utf-8" },
                 body: JSON.stringify({ action: "clear" })
             });
-            setTimeout(fetchAndRenderReports, 1000);
+            setTimeout(fetchAndRenderReports, 800);
         } catch (error) {
             console.error(error);
         }
     }
 }
 
-function openHQAdminModal() {
-    document.getElementById('hq-pass-edit').value = getHQPassword();
-    document.getElementById('hq-admin-modal').style.display = "flex";
-}
+// Change HQ Admin Password
+function changeHQPassword() {
+    const currentPass = getHQPassword();
+    const enteredCurrent = prompt("أدخل كلمة المرور الحالية الإدارة:");
 
-function closeHQAdminModal() {
-    document.getElementById('hq-admin-modal').style.display = "none";
-}
+    if (enteredCurrent !== currentPass) {
+        return alert("كلمة المرور الحالية غير صحيحة!");
+    }
 
-function saveHQAdminSettings() {
-    const newPass = document.getElementById('hq-pass-edit').value.trim();
-    if (!newPass) return alert("لا يمكن ترك كلمة المرور فارغة!");
-
-    localStorage.setItem('salma_hq_password', newPass);
-    alert("تم حفظ كلمة المرور الجديدة بنجاح!");
-    closeHQAdminModal();
+    const newPass = prompt("أدخل كلمة المرور الجديدة:");
+    if (newPass && newPass.trim() !== "") {
+        localStorage.setItem('salma_hq_password', newPass.trim());
+        alert("تم تغيير كلمة المرور بنجاح!");
+    }
 }
