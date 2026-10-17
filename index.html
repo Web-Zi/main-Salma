@@ -3,22 +3,22 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Salma HQ Inventory Receiver</title>
+    <title>الفرع الرئيسي - نظام الجرد</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body class="light-mode">
 
-    <!-- Login Screen -->
-    <div id="hq-login-screen" class="modal-overlay">
+    <!-- Login Modal (Ensured visible on start) -->
+    <div id="hq-login-screen" class="modal-overlay" style="display: flex;">
         <div class="modal-box">
             <h2>🏢 الفرع الرئيسي - تسجيل الدخول</h2>
             <p>يرجى إدخال كلمة المرور للوصول إلى لوحة التقارير</p>
             <input type="password" id="hq-app-password" placeholder="كلمة المرور (الافتراضية: 0000)" class="styled-input">
-            <button onclick="unlockHQApp()" class="btn-primary" style="width: 100%; margin-top: 10px;">دخول</button>
+            <button onclick="unlockHQApp()" class="btn-primary" style="width: 100%; margin-top: 10px; padding: 10px; cursor: pointer;">دخول</button>
         </div>
     </div>
 
-    <!-- Dashboard Main View -->
+    <!-- Dashboard Main View (Hidden initially) -->
     <div id="hq-dashboard" class="hidden container">
         <header class="top-bar">
             <div class="header-titles">
@@ -28,7 +28,6 @@
             <div class="header-actions">
                 <button onclick="toggleTheme()" class="btn-icon" title="تغيير المظهر">🌙/☀️</button>
                 <button onclick="fetchAndRenderReports()" class="btn-secondary">🔄 تحديث</button>
-                <!-- Fixed Settings Button -->
                 <button onclick="changeHQPassword()" class="btn-secondary">⚙️ تغيير كلمة المرور</button>
                 <button onclick="clearAllReports()" class="btn-danger">🗑️ مسح جميع التقارير</button>
             </div>
