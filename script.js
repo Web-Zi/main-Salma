@@ -1,3 +1,6 @@
+// Google Apps Script Cloud API Endpoint
+const CLOUD_API_URL = "https://script.google.com/macros/s/AKfycby-HCCNrYC-ZB0IKRFfZP2w4CXz2SmLz3MNJbGUCRGsywhTNe096MLxLaOU6L4GA3PRuA/exec";
+
 function getHQPassword() {
     return localStorage.getItem('salma_hq_password') || "0000";
 }
@@ -12,29 +15,37 @@ function unlockHQApp() {
     if (entered === getHQPassword()) {
         document.getElementById('hq-login-screen').classList.add('hidden');
         document.getElementById('hq-dashboard').classList.remove('hidden');
-        renderReports();
+        fetchAndRenderReports();
         
-        // Start auto-refresh timer (Every 15 minutes = 900,000 milliseconds)
+        // Auto-refresh every 15 minutes from the cloud
         setInterval(() => {
-            renderReports();
-            console.log("HQ Reports auto-refreshed.");
-        }, 3 * 60 * 1000);
+            fetchAndRenderReports();
+            console.log("HQ Cloud reports auto-refreshed.");
+        }, 15 * 60 * 1000);
 
     } else {
         alert("كلمة المرور غير صحيحة!");
     }
 }
 
-function getStoredReports() {
-    const saved = localStorage.getItem('salma_hq_reports_log');
-    return saved ? JSON.parse(saved) : [];
+async function fetchAndRenderReports() {
+    const container = document.getElementById('reports-list');
+    container.innerHTML = `<p style="text-align: center; color: #64748b;">جاري تحديث التقارير من السحابة...</p>`;
+
+    try {
+        const response = await fetch(CLOUD_API_URL);
+        const reports = await response.json();
+        renderReportsUI(reports);
+    } catch (error) {
+        console.error(error);
+        container.innerHTML = `<p style="text-align: center; color: #ef4444;">فشل الاتصال بالسحابة. تحقق من اتصال الإنترنت.</p>`;
+    }
 }
 
-function renderReports() {
+function renderReportsUI(reports) {
     const container = document.getElementById('reports-list');
-    const reports = getStoredReports();
 
-    if (reports.length === 0) {
+    if (!reports || reports.length === 0) {
         container.innerHTML = `<p style="text-align: center; color: #64748b;">لا توجد تقارير جرد مستلمة حتى الآن.</p>`;
         return;
     }
@@ -62,22 +73,33 @@ function renderReports() {
     });
 }
 
-function toggleReportCheck(id) {
-    let reports = getStoredReports();
-    reports = reports.map(rep => {
-        if (rep.id === id) {
-            rep.checked = !rep.checked;
-        }
-        return rep;
-    });
-    localStorage.setItem('salma_hq_reports_log', JSON.stringify(reports));
-    renderReports();
+async function toggleReportCheck(id) {
+    try {
+        await fetch(CLOUD_API_URL, {
+            method: "POST",
+            mode: "no-cors",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ action: "toggle", id: id })
+        });
+        setTimeout(fetchAndRenderReports, 1000); // Refresh UI after toggling status
+    } catch (error) {
+        console.error(error);
+    }
 }
 
-function clearAllReports() {
-    if (confirm("هل أنت متأكد من مسح جميع التقارير المستلمة من السجل؟")) {
-        localStorage.removeItem('salma_hq_reports_log');
-        renderReports();
+async function clearAllReports() {
+    if (confirm("هل أنت متأكد من مسح جميع التقارير من السجل والسحابة؟")) {
+        try {
+            await fetch(CLOUD_API_URL, {
+                method: "POST",
+                mode: "no-cors",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ action: "clear" })
+            });
+            setTimeout(fetchAndRenderReports, 1000);
+        } catch (error) {
+            console.error(error);
+        }
     }
 }
 
