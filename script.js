@@ -16,15 +16,19 @@ function toggleTheme() {
 
 // Login Verification
 function unlockHQApp() {
-    const entered = document.getElementById('hq-app-password').value;
+    const passwordInput = document.getElementById('hq-app-password');
+    if (!passwordInput) return;
+    
+    const entered = passwordInput.value;
     if (entered === getHQPassword()) {
-        document.getElementById('hq-login-screen').classList.add('hidden');
-        document.getElementById('hq-dashboard').classList.remove('hidden');
+        const loginScreen = document.getElementById('hq-login-screen');
+        const dashboard = document.getElementById('hq-dashboard');
         
-        // Fetch reports immediately upon login
+        if (loginScreen) loginScreen.style.display = 'none';
+        if (dashboard) dashboard.classList.remove('hidden');
+        
         fetchAndRenderReports();
         
-        // Auto-refresh reports every 5 minutes
         setInterval(() => {
             fetchAndRenderReports();
         }, 5 * 60 * 1000);
@@ -33,9 +37,11 @@ function unlockHQApp() {
     }
 }
 
-// Fetch Reports from Google Apps Script Cloud Endpoint
+// Fetch Reports from Cloud Endpoint
 async function fetchAndRenderReports() {
     const container = document.getElementById('reports-list');
+    if (!container) return;
+    
     container.innerHTML = `<p style="text-align: center; color: var(--text-muted); font-weight: bold;">جاري تحديث التقارير من السحابة...</p>`;
 
     try {
@@ -51,6 +57,7 @@ async function fetchAndRenderReports() {
 // Render Received Reports in HQ Dashboard
 function renderReportsUI(reports) {
     const container = document.getElementById('reports-list');
+    if (!container) return;
 
     if (!reports || reports.length === 0) {
         container.innerHTML = `<p style="text-align: center; color: var(--text-muted); padding: 20px;">لا توجد تقارير جرد مستلمة حتى الآن.</p>`;
@@ -58,7 +65,6 @@ function renderReportsUI(reports) {
     }
 
     container.innerHTML = "";
-    // Display newest reports first
     reports.slice().reverse().forEach((rep) => {
         const card = document.createElement('div');
         card.className = `report-card ${rep.checked ? 'checked-report' : ''}`;
@@ -83,7 +89,7 @@ function renderReportsUI(reports) {
     });
 }
 
-// Opens the HTML/PDF report in a formatted popup window ready for printing/saving
+// Opens report window
 function openReportView(dataUri) {
     if (!dataUri) {
         alert("تعذر فتح التقرير. البيانات غير مكتملة.");
@@ -108,7 +114,7 @@ function openReportView(dataUri) {
     }
 }
 
-// Toggle Report "Checked / Reviewed" Status in Cloud
+// Toggle Report Check Status
 async function toggleReportCheck(id) {
     try {
         await fetch(CLOUD_API_URL, {
@@ -122,7 +128,7 @@ async function toggleReportCheck(id) {
     }
 }
 
-// Clear All Reports History
+// Clear All Reports
 async function clearAllReports() {
     if (confirm("هل أنت متأكد من مسح جميع التقارير من السجل والسحابة؟")) {
         try {
@@ -138,12 +144,12 @@ async function clearAllReports() {
     }
 }
 
-// Change HQ Admin Password
+// Change Password
 function changeHQPassword() {
     const currentPass = getHQPassword();
     const enteredCurrent = prompt("أدخل كلمة المرور الحالية للإدارة:");
 
-    if (enteredCurrent === null) return; // User cancelled prompt
+    if (enteredCurrent === null) return;
 
     if (enteredCurrent !== currentPass) {
         return alert("كلمة المرور الحالية غير صحيحة!");
