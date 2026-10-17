@@ -59,7 +59,7 @@ function renderReportsUI(reports) {
 
     container.innerHTML = "";
     // Display newest reports first
-    reports.reverse().forEach((rep) => {
+    reports.slice().reverse().forEach((rep) => {
         const card = document.createElement('div');
         card.className = `report-card ${rep.checked ? 'checked-report' : ''}`;
         
@@ -104,7 +104,6 @@ function openReportView(dataUri) {
         win.document.close();
     } catch (e) {
         console.error("Error opening report window:", e);
-        // Fallback: open directly if decoding fails
         win.location.href = dataUri;
     }
 }
@@ -142,7 +141,9 @@ async function clearAllReports() {
 // Change HQ Admin Password
 function changeHQPassword() {
     const currentPass = getHQPassword();
-    const enteredCurrent = prompt("أدخل كلمة المرور الحالية الإدارة:");
+    const enteredCurrent = prompt("أدخل كلمة المرور الحالية للإدارة:");
+
+    if (enteredCurrent === null) return; // User cancelled prompt
 
     if (enteredCurrent !== currentPass) {
         return alert("كلمة المرور الحالية غير صحيحة!");
